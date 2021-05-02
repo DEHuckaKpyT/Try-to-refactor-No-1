@@ -11,7 +11,7 @@ namespace KuRa
         static BinaryFormatter binaryFormatter = new BinaryFormatter();
         static FileStream fileStream;
 
-        public static void Update(int width, int height)
+        public static void UpdateWindowSize(int width, int height)
         {
             Actions.width = width;
             Actions.height = height;
@@ -60,7 +60,7 @@ namespace KuRa
                         for (j = 0; j < 6; j++)
                             ground[i, j] = 0;
             }
-            if (ClassAI.HasWinner(ref ground)) Form1.activeGround = false; else Form1.activeGround = true;
+            if (ClassAI.HasWinner(ref ground)) Form1.isActiveGround = false; else Form1.isActiveGround = true;
             return ground;
         }
     }

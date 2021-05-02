@@ -8,14 +8,12 @@ namespace KuRa
 {
     public partial class Form1 : Form
     {
-        Graphics g;
         Pen p = new Pen(Color.Black, 3);
         Pen penPlayer = new Pen(Color.Black, 3);
         Pen penAI = new Pen(Color.Black, 3);
         int i, j;
         int[,] ground = new int[6, 6];
-        bool playerDoneTurn;
-        public static bool activeGround;
+        public static bool isActiveGround;
 
         public Form1()
         {
@@ -25,7 +23,7 @@ namespace KuRa
         private void Form1_Load(object sender, EventArgs e)
         {
             ground = Actions.LoadGame("AutoSave.txt", ground);
-            Actions.Update(Width, Height);
+            Actions.UpdateWindowSize(Width, Height);
             ContinueGameButton.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
             StartNewGameButton.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
             SaveGameButton.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
@@ -55,7 +53,7 @@ namespace KuRa
 
         private void StartNewGameButton_Click(object sender, EventArgs e)
         {
-            activeGround = true;
+            isActiveGround = true;
             for (i = 0; i < 6; i++)
                 for (j = 0; j < 6; j++)
                 {
@@ -90,47 +88,54 @@ namespace KuRa
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            if (activeGround)
+            if (isActiveGround)
             {
-                g = CreateGraphics();
-                playerDoneTurn = false;
-                for (i = 0; i < 6; i++)
-                    if (e.X - 1 < Actions.widlen + Actions.part * (i + 2) 
-                        && e.X - 1 > Actions.widlen + Actions.part * (i + 1))//по горизонтали
-                        for (j = 0; j < 6; j++)//здесь я ищу, в какую клетку кликнул пользователь
-                            if (e.Y - 1 < Actions.heilen + Actions.part * (j + 2) 
-                                && e.Y - 1 > Actions.heilen + Actions.part * (j + 1))//по вертикали
-                            {
-                                if (ground[i, j] == -1 || ground[i, j] == -2) return;
-                                ground[i, j] = -1;
-                                playerDoneTurn = true;
-                                Actions.DrawCross(g, penPlayer, i, j);
-                            }
-
-                if (playerDoneTurn)
+                if (PlayerDoneTurn(e.X, e.Y))
                 {
                     if (ClassAI.HasWinner(ref ground))
                     {
                         ShowWin(-3);
                         return;
                     }
+
                     ground = ClassAI.DoMachineTurn(ground);
-                    Invalidate();
+
                     if (ClassAI.HasWinner(ref ground))
                     {
                         ShowWin(-4);
                         return;
                     }
+
+                    if (ClassAI.IsDraw(ground))
+                    {
+                        for (i = 0; i < 6; i++)
+                            for (j = 0; j < 6; j++)
+                                ground[i, j] -= 2;
+                        isActiveGround = false;
+                    }
                 }
             }
-            if (ClassAI.IsDraw(ground))
-            {
-                for (i = 0; i < 6; i++)
-                    for (j = 0; j < 6; j++)
-                        ground[i, j] -= 2;
-                activeGround = false;
-                Invalidate();
-            }
+
+            Invalidate();
+        }
+
+        bool PlayerDoneTurn(int cursorX, int cursorY)
+        {
+            bool playerDoneTurn = false;
+
+            for (i = 0; i < 6; i++)
+                if (cursorX - 1 < Actions.widlen + Actions.part * (i + 2)
+                    && cursorX - 1 > Actions.widlen + Actions.part * (i + 1))//по горизонтали
+                    for (j = 0; j < 6; j++)//здесь я ищу, в какую клетку кликнул пользователь
+                        if (cursorY - 1 < Actions.heilen + Actions.part * (j + 2)
+                            && cursorY - 1 > Actions.heilen + Actions.part * (j + 1))//по вертикали
+                        {
+                            if (ground[i, j] == -1 || ground[i, j] == -2) return false;
+                            ground[i, j] = -1;
+                            playerDoneTurn = true;
+                        }
+
+            return playerDoneTurn;
         }
 
         void ShowWin(int whoseTurn)
@@ -138,7 +143,7 @@ namespace KuRa
             for (i = 0; i < 6; i++)
                 for (j = 0; j < 6; j++)
                     if (ground[i, j] != whoseTurn) ground[i, j] = 0;
-            activeGround = false;
+            isActiveGround = false;
             Invalidate();
         }
 
@@ -154,7 +159,8 @@ namespace KuRa
 
         private void MenuGroupBox_Paint(object sender, PaintEventArgs e)
         {
-            g = e.Graphics;
+            Graphics g = e.Graphics;
+            //рисуются полоски в меню, чтобы было видно цвет игрока и машины
             g.DrawLine(new Pen(penAI.Color, 16), 7, 310, 119, 310);
             g.DrawLine(new Pen(penPlayer.Color, 16), 121, 310, 233, 310);
         }
@@ -192,14 +198,14 @@ namespace KuRa
 
         private void Form1_Resize(object sender, EventArgs e)
         {
-            Actions.Update(Width, Height);
+            Actions.UpdateWindowSize(Width, Height);
             MenuGroupBox.Location = new Point(Width / 2 - MenuGroupBox.Width / 2, Height / 2 - MenuGroupBox.Height / 2);
             Invalidate();
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
-            g = e.Graphics;
+            Graphics g = e.Graphics;
             Actions.DrawGrid(g, p);
             for (i = 0; i < 6; i++)
                 for (j = 0; j < 6; j++)

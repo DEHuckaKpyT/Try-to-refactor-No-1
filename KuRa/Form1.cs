@@ -24,15 +24,6 @@ namespace KuRa
         {
             ground = Actions.LoadGame("AutoSave.txt", ground);
             Actions.UpdateWindowSize(Width, Height);
-            ContinueGameButton.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
-            StartNewGameButton.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
-            SaveGameButton.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
-            LoadGameButton.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
-            ExitButton.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
-            SaveGameTextBox.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
-            LoadComboBox.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
-            ButtonColorEnemy.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
-            ButtonColorMe.PreviewKeyDown += MenuGroupBox_PreviewKeyDown;
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)

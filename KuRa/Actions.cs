@@ -4,9 +4,9 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace KuRa
 {
-    class Actions
+    static class Actions
     {
-        public static int length, width, height, part, widlen, heilen;
+        public static int length, width, height, partOfGrid, widthStart, heightStart;
         static int i, j;
         static BinaryFormatter binaryFormatter = new BinaryFormatter();
         static FileStream fileStream;
@@ -15,27 +15,34 @@ namespace KuRa
         {
             Actions.width = width;
             Actions.height = height;
-            if (height < width) length = height; else length = width;
-            part = length / 8;
-            widlen = width / 2 - length / 2;
-            heilen = height / 2 - length / 2;
+            length = height < width ? height : width;
+            //на 8 частей, чтобы рисовать посередине 6 клеток
+            partOfGrid = length / 8;
+            widthStart = width / 2 - length / 2;
+            heightStart = height / 2 - length / 2;
         }
 
         public static void DrawCross(Graphics g, Pen p, int i, int j)
         {
-            g.DrawLine(p, widlen + part * (i + 1), heilen + part * (j + 1), widlen + part * (i + 2), heilen + part * (j + 2));
-            g.DrawLine(p, widlen + part * (i + 1), heilen + part * (j + 2), widlen + part * (i + 2), heilen + part * (j + 1));
+            g.DrawLine(p, widthStart + partOfGrid * (i + 1), heightStart + partOfGrid * (j + 1), 
+                widthStart + partOfGrid * (i + 2), heightStart + partOfGrid * (j + 2));
+            g.DrawLine(p, widthStart + partOfGrid * (i + 1), heightStart + partOfGrid * (j + 2), 
+                widthStart + partOfGrid * (i + 2), heightStart + partOfGrid * (j + 1));
         }
 
         public static void DrawCircle(Graphics g, Pen p, int i, int j)
         {
-            g.DrawEllipse(p, widlen + part * (i + 1), heilen + part * (j + 1), part, part);
+            g.DrawEllipse(p, widthStart + partOfGrid * (i + 1), heightStart + partOfGrid * (j + 1), partOfGrid, partOfGrid);
         }
 
         public static void DrawGrid(Graphics g, Pen p)
         {
-            for (i = -2; i < 3; i++) g.DrawLine(p, width / 2 - i * part, height / 2 - 3 * part, width / 2 - i * part, height / 2 + 3 * part);
-            for (i = -2; i < 3; i++) g.DrawLine(p, width / 2 - 3 * part, height / 2 - i * part, width / 2 + 3 * part, height / 2 - i * part);
+            for (i = -2; i < 3; i++)
+                g.DrawLine(p, width / 2 - i * partOfGrid, height / 2 - 3 * partOfGrid, 
+                    width / 2 - i * partOfGrid, height / 2 + 3 * partOfGrid);
+            for (i = -2; i < 3; i++) 
+                g.DrawLine(p, width / 2 - 3 * partOfGrid, height / 2 - i * partOfGrid, 
+                    width / 2 + 3 * partOfGrid, height / 2 - i * partOfGrid);
         }
 
         public static void SaveGame(string name, int[,] ground)
@@ -43,9 +50,7 @@ namespace KuRa
             Directory.CreateDirectory(Directory.GetCurrentDirectory() + "/Saves");
             name = Directory.GetCurrentDirectory() + "/Saves/" + name;
             using (fileStream = new FileStream(name, FileMode.OpenOrCreate))
-            {
                 binaryFormatter.Serialize(fileStream, ground);
-            }
         }
 
         public static int[,] LoadGame(string name, int[,] ground)
@@ -56,11 +61,20 @@ namespace KuRa
             {
                 if (fileStream.Length != 0)
                     ground = (int[,])binaryFormatter.Deserialize(fileStream);
-                else for (i = 0; i < 6; i++)
-                        for (j = 0; j < 6; j++)
-                            ground[i, j] = 0;
+                else
+                    ground = SetStartGround(ground);
             }
-            if (ClassAI.HasWinner(ref ground)) Form1.isActiveGround = false; else Form1.isActiveGround = true;
+
+            Form1.isActiveGround = !ClassAI.HasWinner(ref ground);
+
+            return ground;
+        }
+
+        public static int[,] SetStartGround(int[,] ground)
+        {
+            for (i = 0; i < 6; i++)
+                for (j = 0; j < 6; j++)
+                    ground[i, j] = 0;
             return ground;
         }
     }

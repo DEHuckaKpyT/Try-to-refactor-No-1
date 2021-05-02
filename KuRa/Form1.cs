@@ -8,9 +8,10 @@ namespace KuRa
 {
     public partial class Form1 : Form
     {
-        Pen p = new Pen(Color.Black, 3);
+        Pen penGrid = new Pen(Color.Black, 3);
         Pen penPlayer = new Pen(Color.Black, 3);
         Pen penAI = new Pen(Color.Black, 3);
+        Pen penWinner = new Pen(Color.Red, 5);
         int i, j;
         int[,] ground = new int[6, 6];
         public static bool isActiveGround;
@@ -45,11 +46,7 @@ namespace KuRa
         private void StartNewGameButton_Click(object sender, EventArgs e)
         {
             isActiveGround = true;
-            for (i = 0; i < 6; i++)
-                for (j = 0; j < 6; j++)
-                {
-                    ground[i, j] = 0;
-                }
+            ground = Actions.SetStartGround(ground);
             Controls.Remove(MenuGroupBox);
             Invalidate();
         }
@@ -80,7 +77,6 @@ namespace KuRa
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
             if (isActiveGround)
-            {
                 if (PlayerDoneTurn(e.X, e.Y))
                 {
                     if (ClassAI.HasWinner(ref ground))
@@ -104,10 +100,9 @@ namespace KuRa
                                 ground[i, j] -= 2;
                         isActiveGround = false;
                     }
-                }
-            }
 
-            Invalidate();
+                    Invalidate();
+                }
         }
 
         bool PlayerDoneTurn(int cursorX, int cursorY)
@@ -115,11 +110,11 @@ namespace KuRa
             bool playerDoneTurn = false;
 
             for (i = 0; i < 6; i++)
-                if (cursorX - 1 < Actions.widlen + Actions.part * (i + 2)
-                    && cursorX - 1 > Actions.widlen + Actions.part * (i + 1))//по горизонтали
+                if (cursorX - 1 < Actions.widthStart + Actions.partOfGrid * (i + 2)
+                    && cursorX - 1 > Actions.widthStart + Actions.partOfGrid * (i + 1))//по горизонтали
                     for (j = 0; j < 6; j++)//здесь я ищу, в какую клетку кликнул пользователь
-                        if (cursorY - 1 < Actions.heilen + Actions.part * (j + 2)
-                            && cursorY - 1 > Actions.heilen + Actions.part * (j + 1))//по вертикали
+                        if (cursorY - 1 < Actions.heightStart + Actions.partOfGrid * (j + 2)
+                            && cursorY - 1 > Actions.heightStart + Actions.partOfGrid * (j + 1))//по вертикали
                         {
                             if (ground[i, j] == -1 || ground[i, j] == -2) return false;
                             ground[i, j] = -1;
@@ -197,7 +192,7 @@ namespace KuRa
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-            Actions.DrawGrid(g, p);
+            Actions.DrawGrid(g, penGrid);
             for (i = 0; i < 6; i++)
                 for (j = 0; j < 6; j++)
                     switch (ground[i, j])
@@ -209,10 +204,10 @@ namespace KuRa
                             Actions.DrawCircle(g, penAI, i, j);
                             break;
                         case -3:
-                            Actions.DrawCross(g, new Pen(Color.Red, 5), i, j);
+                            Actions.DrawCross(g, penWinner, i, j);
                             break;
                         case -4:
-                            Actions.DrawCircle(g, new Pen(Color.Red, 5), i, j);
+                            Actions.DrawCircle(g, penWinner, i, j);
                             break;
                     }
         }

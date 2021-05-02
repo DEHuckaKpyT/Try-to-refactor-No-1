@@ -9,7 +9,7 @@ namespace KuRa
         static int s;
         static bool fl;
         static int ii, iii;
-        public static int[,] TurnAI(int[,] ground)
+        public static int[,] DoMachineTurn(int[,] ground)
         {
             ground = Step0(ground);
             for (i = 0; i < 6; i++)
@@ -33,9 +33,29 @@ namespace KuRa
                 ground = Step4(ground, i, -2, -1, 30);
                 ground = Step4(ground, i, -1, -2, 27);
             }
+
+            return FindMaxValue(ground);
+        }
+
+        static int[,] FindMaxValue(int[,] ground)
+        {
+            int imaxValue = 0, jmaxValue = 0;
+            int maxValue = -1;
+
+            for (i = 0; i < 6; i++)
+                for (j = 0; j < 6; j++)
+                    if (ground[i, j] > maxValue)
+                    {
+                        maxValue = ground[i, j];
+                        imaxValue = i;
+                        jmaxValue = j;
+                    }
+            ground[imaxValue, jmaxValue] = -2;
+
             return ground;
         }
-        public static bool Check(ref int[,] ground)
+
+        public static bool HasWinner(ref int[,] ground)
         {
             for (i = 0; i < 6; i++)
             {
@@ -60,7 +80,7 @@ namespace KuRa
             }
             return false;
         }
-        public static bool CheckDraw(int[,] ground)
+        public static bool IsDraw(int[,] ground)
         {
             k = 0;
             for (i = 0; i < 6; i++)

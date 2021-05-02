@@ -12,9 +12,9 @@ namespace KuRa
         Pen p = new Pen(Color.Black, 3);
         Pen penPlayer = new Pen(Color.Black, 3);
         Pen penAI = new Pen(Color.Black, 3);
-        int i, j, k, imax, jmax, max;
+        int i, j;
         int[,] ground = new int[6, 6];
-        bool flag;
+        bool playerDoneTurn;
         public static bool activeGround;
 
         public Form1()
@@ -62,7 +62,7 @@ namespace KuRa
                     ground[i, j] = 0;
                 }
             Controls.Remove(MenuGroupBox);
-            Refresh();
+            Invalidate();
         }
 
         private void SaveGameButton_Click(object sender, EventArgs e)
@@ -76,7 +76,7 @@ namespace KuRa
             if (LoadComboBox.SelectedItem != null)
                 ground = Actions.LoadGame(LoadComboBox.SelectedItem.ToString() + ".txt", ground);
             Controls.Remove(MenuGroupBox);
-            Refresh();
+            Invalidate();
         }
 
         private void MenuGroupBox_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
@@ -93,65 +93,53 @@ namespace KuRa
             if (activeGround)
             {
                 g = CreateGraphics();
-                imax = jmax = 0;
-                max = -1;
-                flag = false;
+                playerDoneTurn = false;
                 for (i = 0; i < 6; i++)
-                {
-                    if (e.X - 1 < Actions.widlen + Actions.part * (i + 2) & e.X - 1 > Actions.widlen + Actions.part * (i + 1))
-                        for (j = 0; j < 6; j++)
-                        {
-                            if (e.Y - 1 < Actions.heilen + Actions.part * (j + 2) & e.Y - 1 > Actions.heilen + Actions.part * (j + 1))
+                    if (e.X - 1 < Actions.widlen + Actions.part * (i + 2) 
+                        && e.X - 1 > Actions.widlen + Actions.part * (i + 1))//по горизонтали
+                        for (j = 0; j < 6; j++)//здесь я ищу, в какую клетку кликнул пользователь
+                            if (e.Y - 1 < Actions.heilen + Actions.part * (j + 2) 
+                                && e.Y - 1 > Actions.heilen + Actions.part * (j + 1))//по вертикали
                             {
                                 if (ground[i, j] == -1 || ground[i, j] == -2) return;
                                 ground[i, j] = -1;
-                                flag = true;
+                                playerDoneTurn = true;
                                 Actions.DrawCross(g, penPlayer, i, j);
                             }
-                        }
-                }
-                if (flag)
+
+                if (playerDoneTurn)
                 {
-                    if (ClassAI.Check(ref ground))
+                    if (ClassAI.HasWinner(ref ground))
                     {
-                        for (i = 0; i < 6; i++)
-                            for (j = 0; j < 6; j++)
-                                if (ground[i, j] != -3) ground[i,j] = 0;
-                        activeGround = false;
-                        Refresh();
+                        ShowWin(-3);
                         return;
                     }
-                    ground = ClassAI.TurnAI(ground);
-                    for (i = 0; i < 6; i++)
-                        for (j = 0; j < 6; j++)
-                            if (ground[i, j] > max)
-                            {
-                                max = ground[i, j];
-                                imax = i;
-                                jmax = j;
-                            }
-                    ground[imax, jmax] = -2;
-                    Actions.DrawCircle(g, penAI, imax, jmax);
-                    if (ClassAI.Check(ref ground))
+                    ground = ClassAI.DoMachineTurn(ground);
+                    Invalidate();
+                    if (ClassAI.HasWinner(ref ground))
                     {
-                        for (i = 0; i < 6; i++)
-                            for (j = 0; j < 6; j++)
-                                if (ground[i, j] != -4) ground[i, j] = 0;
-                        activeGround = false;
-                        Refresh();
+                        ShowWin(-4);
                         return;
                     }
                 }
             }
-            if (ClassAI.CheckDraw(ground))
+            if (ClassAI.IsDraw(ground))
             {
                 for (i = 0; i < 6; i++)
                     for (j = 0; j < 6; j++)
                         ground[i, j] -= 2;
-            activeGround = false;
-            Refresh();
+                activeGround = false;
+                Invalidate();
             }
-            //Refresh();
+        }
+
+        void ShowWin(int whoseTurn)
+        {
+            for (i = 0; i < 6; i++)
+                for (j = 0; j < 6; j++)
+                    if (ground[i, j] != whoseTurn) ground[i, j] = 0;
+            activeGround = false;
+            Invalidate();
         }
 
         private void ContinueGameButton_Click(object sender, EventArgs e)
@@ -175,14 +163,14 @@ namespace KuRa
         {
             if (colorDialog1.ShowDialog() == DialogResult.Cancel) return;
             penAI.Color = colorDialog1.Color;
-            Refresh();
+            Invalidate();
         }
 
         private void ButtonColorMe_Click(object sender, EventArgs e)
         {
             if (colorDialog1.ShowDialog() == DialogResult.Cancel) return;
             penPlayer.Color = colorDialog1.Color;
-            Refresh();
+            Invalidate();
         }
 
         private void LoadComboBox_Enter(object sender, EventArgs e)
@@ -191,7 +179,10 @@ namespace KuRa
             var names = Directory.GetFiles(Directory.GetCurrentDirectory() + "/Saves/", "*.txt");
             foreach (var name in names)
                 LoadComboBox.Items.Add(Path.GetFileName(name).Remove(Path.GetFileName(name).Length - 4));
-            if (names.Count() < 7) LoadComboBox.DropDownHeight = names.Count() * 20 + 2; else LoadComboBox.DropDownHeight = 142;
+            if (names.Count() < 7) 
+                LoadComboBox.DropDownHeight = names.Count() * 20 + 2; //чтобы при раскрытии списка, всё было красиво
+            else 
+                LoadComboBox.DropDownHeight = 142;//на столько пикселей раскрывается список, елси в нём много элементов
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -203,7 +194,7 @@ namespace KuRa
         {
             Actions.Update(Width, Height);
             MenuGroupBox.Location = new Point(Width / 2 - MenuGroupBox.Width / 2, Height / 2 - MenuGroupBox.Height / 2);
-            Refresh();
+            Invalidate();
         }
 
         private void Form1_Paint(object sender, PaintEventArgs e)
@@ -212,7 +203,6 @@ namespace KuRa
             Actions.DrawGrid(g, p);
             for (i = 0; i < 6; i++)
                 for (j = 0; j < 6; j++)
-                {
                     switch (ground[i, j])
                     {
                         case -1:
@@ -228,11 +218,6 @@ namespace KuRa
                             Actions.DrawCircle(g, new Pen(Color.Red, 5), i, j);
                             break;
                     }
-
-                    //Font f = new Font("Times New Roman", 30);
-                    //Brush b = new SolidBrush(Color.Black);
-                    //g.DrawString(ground[i, j].ToString(), f, b, Width / 2 - Actions.length / 2 + Actions.part * (i + 1), Height / 2 - Actions.length / 2 + Actions.part * (j + 1));
-                }
         }
     }
 }

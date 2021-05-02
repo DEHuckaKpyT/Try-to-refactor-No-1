@@ -60,7 +60,7 @@ namespace KuRa
                         for (j = 0; j < 6; j++)
                             ground[i, j] = 0;
             }
-            if (ClassAI.Check(ref ground)) Form1.activeGround = false; else Form1.activeGround = true;
+            if (ClassAI.HasWinner(ref ground)) Form1.activeGround = false; else Form1.activeGround = true;
             return ground;
         }
     }

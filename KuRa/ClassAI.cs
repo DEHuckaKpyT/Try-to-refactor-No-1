@@ -6,32 +6,37 @@ namespace KuRa
     {
         static Random rand = new Random();
         static int i, j, k;
-        static int s;
         static bool fl;
         static int ii, iii;
+
         public static int[,] DoMachineTurn(int[,] ground)
         {
+            int myWeight = 30;
+            int enemyWeight = 27;
             ground = Step0(ground);
+
             for (i = 0; i < 6; i++)
             {
-                ground = Step1(ground, i, 0, 5, -2, -1, 30);
-                ground = Step1(ground, i, 1, 6, -2, -1, 30);
-                ground = Step1(ground, i, 0, 5, -1, -2, 27);
-                ground = Step1(ground, i, 1, 6, -1, -2, 27);
+                ground = Step1(ground, i, 0, 5, -2, -1, myWeight);
+                ground = Step1(ground, i, 1, 6, -2, -1, myWeight);
+                ground = Step1(ground, i, 0, 5, -1, -2, enemyWeight);
+                ground = Step1(ground, i, 1, 6, -1, -2, enemyWeight);
             }
+
             for (j = 0; j < 6; j++)
             {
-                ground = Step2(ground, j, 0, 5, -2, -1, 30);
-                ground = Step2(ground, j, 1, 6, -2, -1, 30);
-                ground = Step2(ground, j, 0, 5, -1, -2, 27);
-                ground = Step2(ground, j, 1, 6, -1, -2, 27);
+                ground = Step2(ground, j, 0, 5, -2, -1, myWeight);
+                ground = Step2(ground, j, 1, 6, -2, -1, myWeight);
+                ground = Step2(ground, j, 0, 5, -1, -2, enemyWeight);
+                ground = Step2(ground, j, 1, 6, -1, -2, enemyWeight);
             }
+
             for (i = 0; i < 4; i++)
             {
-                ground = Step3(ground, i, -2, -1, 30);
-                ground = Step3(ground, i, -1, -2, 27);
-                ground = Step4(ground, i, -2, -1, 30);
-                ground = Step4(ground, i, -1, -2, 27);
+                ground = Step3(ground, i, -2, -1, myWeight);
+                ground = Step3(ground, i, -1, -2, enemyWeight);
+                ground = Step4(ground, i, -2, -1, myWeight);
+                ground = Step4(ground, i, -1, -2, enemyWeight);
             }
 
             return FindMaxValue(ground);
@@ -80,35 +85,38 @@ namespace KuRa
             }
             return false;
         }
+
         public static bool IsDraw(int[,] ground)
         {
             k = 0;
             for (i = 0; i < 6; i++)
                 for (j = 0; j < 6; j++)
                     if (ground[i, j] == -1 || ground[i, j] == -2) k++;
-            if (k == 36) return true;
-            return false;
+
+            return k == 36;
         }
 
         static int[,] Step0(int[,] ground)
         {
             for (i = 0; i < 6; i++)
                 for (j = 0; j < 6; j++)
-                    if (ground[i, j] != -1 & ground[i, j] != -2) ground[i, j] = 0;
+                    if (ground[i, j] != -1 && ground[i, j] != -2) ground[i, j] = 0;
+
             return ground;
         }
 
         static int[,] Step1(int[,] ground, int i, int start, int end, int Me, int Enemy, int weight)
         {
-            s = 0;
-            fl = false;
+            int countMyCells = 0;
             for (j = start; j < end; j++)
             {
-                if (ground[i, j] == Enemy || ground[i, j] == -3 || ground[i, j] == -4) fl = true;
-                if (ground[i, j] == Me) s++;
+                if (ground[i, j] == Enemy || ground[i, j] == -3 || ground[i, j] == -4)
+                    fl = true;
+                if (ground[i, j] == Me) countMyCells++;
             }
+
             if (!fl)
-                switch (s)
+                switch (countMyCells)
                 {
                     case 1:
                         for (j = start; j < end; j++)
@@ -127,20 +135,21 @@ namespace KuRa
                             if (ground[i, j] != Me) ground[i, j] += weight * 25 + rand.Next(10);
                         break;
                 }
+
             return ground;
         }
 
         static int[,] Step2(int[,] ground, int j, int start, int end, int Me, int Enemy, int weight)
         {
-            s = 0;
+            int countMyCells = 0;
             fl = false;
             for (i = start; i < end; i++)
             {
                 if (ground[i, j] == Enemy || ground[i, j] == -3 || ground[i, j] == -4) fl = true;
-                if (ground[i, j] == Me) s++;
+                if (ground[i, j] == Me) countMyCells++;
             }
             if (!fl)
-                switch (s)
+                switch (countMyCells)
                 {
                     case 1:
                         for (i = start; i < end; i++)
@@ -165,17 +174,17 @@ namespace KuRa
 
         static int[,] Step3(int[,] ground, int i, int Me, int Enemy, int weight)
         {
-            s = 0;
+            int countMyCells = 0;
             fl = false;
             ii = i / 2;
             iii = i % 2;
             for (j = 0; j < 5; j++)
             {
                 if (ground[j + ii, j + iii] == Enemy || ground[j + ii, j + iii] == -3 || ground[j + ii, j + iii] == -4) fl = true;
-                if (ground[j + ii, j + iii] == Me) s++;
+                if (ground[j + ii, j + iii] == Me) countMyCells++;
             }
             if (!fl)
-                switch (s)
+                switch (countMyCells)
                 {
                     case 1:
                         for (j = 0; j < 5; j++)
@@ -200,17 +209,17 @@ namespace KuRa
 
         static int[,] Step4(int[,] ground, int i, int Me, int Enemy, int weight)
         {
-            s = 0;
+            int countMyCells = 0;
             fl = false;
             ii = i / 2;
             iii = i % 2;
             for (j = 0; j < 5; j++)
             {
                 if (ground[4 - j + ii, j + iii] == Enemy || ground[4 - j + ii, j + iii] == -3 || ground[4 - j + ii, j + iii] == -4) fl = true;
-                if (ground[4 - j + ii, j + iii] == Me) s++;
+                if (ground[4 - j + ii, j + iii] == Me) countMyCells++;
             }
             if (!fl)
-                switch (s)
+                switch (countMyCells)
                 {
                     case 1:
                         for (j = 0; j < 5; j++)
@@ -234,15 +243,15 @@ namespace KuRa
 
         static bool Check1(ref int[,] ground, int i, int start, int end, int Me, int Enemy)
         {
-            s = 0;
+            int countMyCells = 0;
             fl = false;
             for (j = start; j < end; j++)
             {
                 if (ground[i, j] == Enemy || ground[i, j] == Enemy - 2) fl = true;
-                if (ground[i, j] == Me || ground[i, j] == Me - 2) s++;
+                if (ground[i, j] == Me || ground[i, j] == Me - 2) countMyCells++;
             }
             if (!fl)
-                if (s == 5)
+                if (countMyCells == 5)
                 {
                     if (Me == -1)
                         for (j = start; j < end; j++) ground[i, j] = -3;
@@ -251,17 +260,18 @@ namespace KuRa
                 }
             return false;
         }
+
         static bool Check2(ref int[,] ground, int j, int start, int end, int Me, int Enemy)
         {
-            s = 0;
+            int countMyCells = 0;
             fl = false;
             for (i = start; i < end; i++)
             {
                 if (ground[i, j] == Enemy || ground[i, j] == Enemy - 2) fl = true;
-                if (ground[i, j] == Me || ground[i, j] == Me - 2) s++;
+                if (ground[i, j] == Me || ground[i, j] == Me - 2) countMyCells++;
             }
             if (!fl)
-                if (s == 5)
+                if (countMyCells == 5)
                 {
                     if (Me == -1)
                         for (i = start; i < end; i++) ground[i, j] = -3;
@@ -273,17 +283,17 @@ namespace KuRa
 
         static bool Check3(ref int[,] ground, int i, int Me, int Enemy)
         {
-            s = 0;
+            int countMyCells = 0;
             fl = false;
             ii = i / 2;
             iii = i % 2;
             for (j = 0; j < 5; j++)
             {
                 if (ground[j + ii, j + iii] == Enemy || ground[j + ii, j + iii] == Enemy - 2) fl = true;
-                if (ground[j + ii, j + iii] == Me || ground[j + ii, j + iii] == Me - 2) s++;
+                if (ground[j + ii, j + iii] == Me || ground[j + ii, j + iii] == Me - 2) countMyCells++;
             }
             if (!fl)
-                if (s == 5)
+                if (countMyCells == 5)
                 {
                     if (Me == -1)
                         for (j = 0; j < 5; j++) ground[j + ii, j + iii] = -3;
@@ -292,19 +302,20 @@ namespace KuRa
                 }
             return false;
         }
+
         static bool Check4(ref int[,] ground, int i, int Me, int Enemy)
         {
-            s = 0;
+            int countMyCells = 0;
             fl = false;
             ii = i / 2;
             iii = i % 2;
             for (j = 0; j < 5; j++)
             {
                 if (ground[4 - j + ii, j + iii] == Enemy || ground[4 - j + ii, j + iii] == Enemy - 2) fl = true;
-                if (ground[4 - j + ii, j + iii] == Me || ground[4 - j + ii, j + iii] == Me - 2) s++;
+                if (ground[4 - j + ii, j + iii] == Me || ground[4 - j + ii, j + iii] == Me - 2) countMyCells++;
             }
             if (!fl)
-                if (s == 5)
+                if (countMyCells == 5)
                 {
                     if (Me == -1)
                         for (j = 0; j < 5; j++) ground[4 - j + ii, j + iii] = -3;
